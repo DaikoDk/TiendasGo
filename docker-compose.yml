@@ -1,5 +1,5 @@
 services:
-  # 1. Tu Base de Datos (Ya la tenías, solo ajustamos el nombre del servicio a 'sqlserver')
+  # --- BASE DE DATOS ---
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sql-tiendasgo
@@ -10,30 +10,57 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - C:\Users\djbar\ProyectoIntegrador\TiendasGo\db\DB_TiendasGo:/var/opt/mssql/tiendasgo_db
+      # Mapeo directo para persistencia en tu carpeta local
+      - ./db/DB_TiendasGo:/var/opt/mssql/tiendasgo_db
 
-  # 2. Tu Backend de Java (Spring Boot)
-  ms-inventario:
-    build: ./ms-inventario
-    container_name: java-inventario
+  # --- MICROSERVICIOS (BACKEND) ---
+  
+  # 1. Auth & Core
+  tg-auth-core:
+    build: ./tg-auth-core
+    container_name: ms-auth-core
     ports:
-      - "8081:8081"
+      - "8080:8080"
     environment:
-      # IMPORTANTE: Usamos 'sqlserver' en la URL porque así se llama el servicio arriba
-      - SPRING_DATASOURCE_URL=jdbc:sqlserver://sqlserver:1433;databaseName=TiendasGo_Inv;encrypt=true;trustServerCertificate=true
+      - SPRING_DATASOURCE_URL=jdbc:sqlserver://sqlserver:1433;databaseName=TiendasGo;encrypt=true;trustServerCertificate=true
       - SPRING_DATASOURCE_USERNAME=sa
       - SPRING_DATASOURCE_PASSWORD=TiendasGo2026!
     depends_on:
       - sqlserver
 
-  # 3. Tu Frontend de Angular
-  tiendasgo-front:
-    build: ./tiendasgo-front
-    container_name: angular-tiendasgo
+  # 2. Catalog & Logistics
+  tg-catalog-logistics:
+    build: ./tg-catalog-logistics
+    container_name: ms-catalog-logistics
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:sqlserver://sqlserver:1433;databaseName=TiendasGo;encrypt=true;trustServerCertificate=true
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=TiendasGo2026!
+    depends_on:
+      - sqlserver
+
+  # 3. Purchases
+  tg-purchases:
+    build: ./tg-purchases
+    container_name: ms-purchases
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:sqlserver://sqlserver:1433;databaseName=TiendasGo;encrypt=true;trustServerCertificate=true
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=TiendasGo2026!
+    depends_on:
+      - sqlserver
+
+  # --- FRONTEND ---
+  tg-frontend:
+    build: ./tg-frontend
+    container_name: front-tiendasgo
     ports:
       - "4200:80"
     depends_on:
-      - ms-inventario
-
-volumes:
-  tiendasgo_data:
+      - tg-auth-core
+      - tg-catalog-logistics
+      - tg-purchases
