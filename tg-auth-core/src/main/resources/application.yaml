@@ -1,11 +1,19 @@
 server:
   port: 8080
 
+project:
+  jwt:
+    # Configurar variable de entorno JWT_SECRET en tu sistema operativo con el valor deseado
+    secret: ${JWT_SECRET}
+    # Tiempo de expiración: 86,400,000 ms = 24 Horas
+    expiration: 86400000
+
 spring:
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=TiendasGo;encrypt=true;trustServerCertificate=true
     username: sa
-    password: TiendasGo2026!
+    # Configurar variable de entorno DB_PASSWORD en tu sistema operativo con el valor deseado
+    password: ${DB_PASSWORD:TiendasGo2026!}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
@@ -16,3 +24,8 @@ spring:
       hibernate:
         format_sql: true
         default_schema: auth
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+

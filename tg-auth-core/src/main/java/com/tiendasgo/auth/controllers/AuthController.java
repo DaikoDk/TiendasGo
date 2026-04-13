@@ -4,6 +4,7 @@ import com.tiendasgo.auth.dto.request.LoginRequest;
 import com.tiendasgo.auth.dto.response.AuthResponse;
 import com.tiendasgo.auth.services.IAuthService;
 import com.tiendasgo.auth.utils.ApiPaths;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,8 +20,8 @@ public class AuthController {
     private final IAuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authService.login(loginRequest));
     }
 }
 

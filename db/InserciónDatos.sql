@@ -27,7 +27,7 @@ VALUES (
     (SELECT TOP 1 id_sede FROM auth.sedes WHERE nombre = 'SEDE CENTRAL - LIMA'),
     'Administrador Inicial',
     'admin@tiendasgo.com',
-    '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.Smdz80.', -- Hash BCrypt de 'admin123'
+    '$2a$10$E77e4tvH1jdX1bBT8OevwOugs5JGgQ9ocfZDitHuiQp4hxRkk7qEq', -- Hash BCrypt de 'admin123'
     1,
     GETDATE()
 );
@@ -38,3 +38,5 @@ INSERT INTO auth.permisos_rol (id_rol, id_permiso)
 SELECT (SELECT id_rol FROM auth.roles WHERE nombre = 'ADMIN'), id_permiso 
 FROM auth.permisos;
 GO
+
+
