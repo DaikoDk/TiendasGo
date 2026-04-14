@@ -3,7 +3,7 @@ server:
 
 project:
   jwt:
-    # Configurar variable de entorno JWT_SECRET en tu sistema operativo con el valor deseado
+    # Configurar variable de entorno JWT_SECRET
     secret: ${JWT_SECRET}
     # Tiempo de expiración: 86,400,000 ms = 24 Horas
     expiration: 86400000
@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=TiendasGo;encrypt=true;trustServerCertificate=true
     username: sa
-    # Configurar variable de entorno DB_PASSWORD en tu sistema operativo con el valor deseado
+    # Configurar variable de entorno DB_PASSWORD
     password: ${DB_PASSWORD:TiendasGo2026!}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
@@ -24,6 +24,8 @@ spring:
       hibernate:
         format_sql: true
         default_schema: auth
+
+# No olvidar borrar el DEBUG
 
 logging:
   level:

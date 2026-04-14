@@ -11,24 +11,31 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
-        Map<String, Object> body = Map.of(
-            "timestamp", LocalDateTime.now().toString(),
-            "status", ex.getStatus().value(),
-            "error", ex.getStatus().getReasonPhrase(),
-            "message", ex.getMessage()
-        );
-        return ResponseEntity.status(ex.getStatus()).body(body);
+        return buildResponse(ex.getStatus().value(), ex.getStatus().getReasonPhrase(), ex.getMessage());
     }
 
+    // Manejar los errores de @Valid (Email inválido, NotBlank, etc.)
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        String mensaje = ex.getBindingResult().getFieldError().getDefaultMessage();
+        return buildResponse(400, "Bad Request", mensaje);
+    }
+
+    // Error generic
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        ex.printStackTrace();
+        return buildResponse(500, "Internal Server Error", "Ocurrió un error inesperado en el servidor");
+    }
+
+    private ResponseEntity<Map<String, Object>> buildResponse(int status, String error, String message) {
         Map<String, Object> body = Map.of(
-            "timestamp", LocalDateTime.now().toString(),
-            "status", 500,
-            "error", "Internal Server Error",
-            "message", ex.getMessage()
+                "timestamp", LocalDateTime.now().toString(),
+                "status", status,
+                "error", error,
+                "message", message
         );
-        return ResponseEntity.internalServerError().body(body);
+        return ResponseEntity.status(status).body(body);
     }
 }
 
