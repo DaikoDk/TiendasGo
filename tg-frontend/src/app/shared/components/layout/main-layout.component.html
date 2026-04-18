@@ -29,6 +29,12 @@
       </div>
     </header>
 
+    @if (accessDeniedMessage().length > 0) {
+      <div class="border-b border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 lg:px-6">
+        {{ accessDeniedMessage() }}
+      </div>
+    }
+
     <main class="min-w-0 flex-1 overflow-auto p-4 lg:p-6">
       <div class="mx-auto w-full max-w-7xl">
         <router-outlet />

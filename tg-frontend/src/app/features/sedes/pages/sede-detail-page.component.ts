@@ -41,6 +41,41 @@ export class SedeDetailPageComponent {
   protected readonly errorMessage = signal('');
   protected readonly horarioRows = computed(() => this.getHorarioRows(this.sede()?.horarioConfig));
 
+  protected displaySedeEmail(data: SedeResponse): string {
+    const email = data.email?.trim() ?? '';
+    if (email.length > 0) {
+      return email;
+    }
+
+    const slug = (data.nombre ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+    return slug.length > 0 ? `sede.${slug}@tiendasgo.com` : '';
+  }
+
+  protected displayGerenteNombre(data: SedeResponse): string {
+    const fromGerente = data.gerente?.nombreCompleto?.trim() ?? '';
+    if (fromGerente.length > 0) {
+      return fromGerente;
+    }
+
+    const legacy = data.gerenteNombre?.trim() ?? '';
+    return legacy.length > 0 ? legacy : 'Sin gerente';
+  }
+
+  protected displayGerenteEmail(data: SedeResponse): string {
+    const fromGerente = data.gerente?.email?.trim() ?? '';
+    if (fromGerente.length > 0) {
+      return fromGerente;
+    }
+
+    const legacy = data.gerenteEmail?.trim() ?? '';
+    return legacy.length > 0 ? legacy : 'Sin gerente';
+  }
+
   constructor() {
     this.loadSede();
   }
@@ -85,13 +120,17 @@ export class SedeDetailPageComponent {
     return 'No se pudo cargar el detalle de sede.';
   }
 
-  private getHorarioRows(horarioConfig: string | undefined): HorarioRow[] {
+  private getHorarioRows(
+    horarioConfig: Record<string, unknown> | string | null | undefined
+  ): HorarioRow[] {
     if (!horarioConfig) {
       return [];
     }
 
     try {
-      const parsed = JSON.parse(horarioConfig) as Partial<Record<(typeof this.dayOrder)[number], HorarioDiaConfig>>;
+      const parsed = typeof horarioConfig === 'string'
+        ? JSON.parse(horarioConfig) as Partial<Record<(typeof this.dayOrder)[number], HorarioDiaConfig>>
+        : horarioConfig as Partial<Record<(typeof this.dayOrder)[number], HorarioDiaConfig>>;
 
       return this.dayOrder
         .filter((day) => parsed[day] !== undefined)
@@ -120,7 +159,7 @@ export class SedeDetailPageComponent {
         {
           day: 'lunes',
           dayLabel: 'Horario',
-          value: horarioConfig
+          value: typeof horarioConfig === 'string' ? horarioConfig : JSON.stringify(horarioConfig)
         }
       ];
     }

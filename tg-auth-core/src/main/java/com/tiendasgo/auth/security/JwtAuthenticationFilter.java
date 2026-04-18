@@ -43,26 +43,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             return;
         }
 
-        jwt = authHeader.substring(7);
-        userEmail = jwtProvider.extractUsername(jwt);
+        try {
+            jwt = authHeader.substring(7);
+            userEmail = jwtProvider.extractUsername(jwt);
 
-        if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-            if (jwtProvider.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                if (jwtProvider.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
                         userDetails.getAuthorities()
-                );
+                    );
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
-
+        } catch (Exception ex) {
+            // Token inválido o malformado: seguimos sin autenticar para que Spring responda 401/403.
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

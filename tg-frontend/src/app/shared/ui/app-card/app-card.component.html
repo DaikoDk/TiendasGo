@@ -1,3 +1,8 @@
-<article class="nocturnal-shadow rounded-xl border border-on-surface/10 bg-surface-container/70 p-6 backdrop-blur-3xl">
+<article
+  class="nocturnal-shadow rounded-xl border bg-surface-container/70 p-6 backdrop-blur-3xl"
+  [class.border-on-surface/10]="borderVariant() === 'default'"
+  [class.border-emerald-400]="borderVariant() === 'active'"
+  [class.border-rose-400]="borderVariant() === 'inactive'"
+>
   <ng-content />
 </article>

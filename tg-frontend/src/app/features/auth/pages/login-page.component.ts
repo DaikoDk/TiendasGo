@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -24,6 +25,7 @@ export class LoginPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal('');
@@ -54,12 +56,27 @@ export class LoginPageComponent {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => {
-          void this.router.navigateByUrl('/dashboard');
+          void this.router.navigateByUrl(this.resolveReturnUrl());
         },
         error: (error: unknown) => {
           this.errorMessage.set(this.resolveError(error));
         }
       });
+  }
+
+  private resolveReturnUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl')?.trim() ?? '';
+
+    if (returnUrl.length === 0) {
+      return '/dashboard';
+    }
+
+    // Only allow internal dashboard routes to avoid unexpected redirects.
+    if (!returnUrl.startsWith('/dashboard')) {
+      return '/dashboard';
+    }
+
+    return returnUrl;
   }
 
   private resolveError(error: unknown): string {

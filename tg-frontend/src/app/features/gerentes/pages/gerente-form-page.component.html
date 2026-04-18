@@ -1,0 +1,138 @@
+<section class="mx-auto w-full max-w-5xl space-y-6 px-2 md:px-4">
+  <a
+    routerLink="/dashboard/usuarios"
+    class="inline-flex items-center font-label text-sm font-semibold text-primary hover:underline"
+  >
+    Volver a gerentes
+  </a>
+
+  <app-card class="mx-auto block w-full max-w-4xl">
+    <div class="space-y-2">
+      <h1 class="font-headline text-2xl font-bold text-on-surface">
+        {{ isEditMode() ? 'Editar gerente' : 'Nuevo gerente' }}
+      </h1>
+      <p class="text-sm text-on-surface-variant">
+        {{ isEditMode() ? 'Actualiza los datos sin forzar cambio de contraseña.' : 'Completa los datos para registrar un nuevo gerente.' }}
+      </p>
+    </div>
+
+    @if (errorMessage().length > 0) {
+      <p class="mt-3 text-sm font-medium text-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    @if (statusMessage().length > 0) {
+      <p class="mt-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-200">
+        {{ statusMessage() }}
+      </p>
+    }
+
+    @if (loading()) {
+      <p class="mt-3 text-sm text-on-surface-variant">Cargando datos del gerente...</p>
+    } @else {
+      <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="submit()">
+        @if (isEditMode()) {
+          <app-input
+            formControlName="nombreCompleto"
+            label="Nombre completo"
+            placeholder="Ej. Maria Fernanda Lopez Torres"
+            icon="user"
+            autocomplete="name"
+          />
+
+          <app-input
+            formControlName="email"
+            label="Correo"
+            placeholder="gerente@tiendasgo.com"
+            type="email"
+            icon="mail"
+            autocomplete="email"
+          />
+
+          <div class="space-y-2">
+            <label class="block pl-1 font-label text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+              Sede asignada
+            </label>
+
+            <select
+              formControlName="idSede"
+              class="h-14 w-full rounded-full border border-on-surface/15 bg-surface-container-highest px-4 text-sm text-on-surface transition-all duration-300 focus:border-primary/60 focus:bg-surface-bright focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">Seleccionar sede</option>
+              @for (sede of sedes(); track sede.idSede) {
+                <option [value]="sede.idSede">{{ sede.nombre }} ({{ sede.idSede }})</option>
+              }
+            </select>
+
+            @if (form.controls.idSede.touched && form.controls.idSede.invalid) {
+              <p class="pl-1 text-xs font-medium text-error">Selecciona una sede valida.</p>
+            }
+          </div>
+        } @else {
+          <app-input
+            formControlName="nombres"
+            label="Nombres"
+            placeholder="Ej. Gian Carlos"
+            icon="user"
+            autocomplete="given-name"
+          />
+
+          <app-input
+            formControlName="apellidos"
+            label="Apellidos"
+            placeholder="Ej. Perez Lopez"
+            icon="badge"
+            autocomplete="family-name"
+          />
+        }
+
+        <app-input
+          formControlName="password"
+          [label]="isEditMode() ? 'Contraseña (opcional)' : 'Contraseña del gerente'"
+          placeholder="Minimo 8 caracteres"
+          type="password"
+          icon="lock"
+          autocomplete="new-password"
+        />
+
+        <div class="flex items-center gap-3 rounded-2xl border border-on-surface/10 bg-surface-container-highest px-4 py-3">
+          <input
+            id="estado"
+            formControlName="estado"
+            type="checkbox"
+            class="size-4 rounded border-white/20 bg-transparent text-primary focus:ring-primary/30"
+          />
+          <label for="estado" class="text-sm font-medium text-on-surface">Gerente activo</label>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <button
+            type="submit"
+            class="inline-flex h-12 items-center justify-center rounded-full bg-primary px-5 font-semibold text-on-primary-fixed transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="saving()"
+          >
+            {{ saving() ? 'Guardando...' : (isEditMode() ? 'Actualizar gerente' : 'Crear gerente') }}
+          </button>
+
+          <a
+            routerLink="/dashboard/usuarios"
+            class="inline-flex h-12 items-center justify-center rounded-full border border-on-surface/10 bg-surface-container px-5 font-semibold text-on-surface hover:bg-surface-container-high"
+          >
+            Cancelar
+          </a>
+        </div>
+      </form>
+    }
+  </app-card>
+</section>
+
+<app-admin-approval-modal
+  [visible]="approvalOpen()"
+  [title]="approvalTitle"
+  [message]="'Para guardar cambios debes validar credenciales de administrador.'"
+  [confirmLabel]="isEditMode() ? 'Aprobar y editar' : 'Aprobar y crear'"
+  [loading]="approvalLoading()"
+  [errorMessage]="approvalError()"
+  [prefilledEmail]="approvalPrefilledEmail()"
+  (approved)="approveAndSave($event)"
+  (cancelled)="closeApprovalModal()"
+/>

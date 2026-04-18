@@ -17,7 +17,9 @@ import { AdminApprovalModalComponent } from '../../../shared/components/admin-ap
 import { AppButtonComponent } from '../../../shared/ui/app-button/app-button.component';
 import { AppCardComponent } from '../../../shared/ui/app-card/app-card.component';
 import { AppInputComponent } from '../../../shared/ui/app-input/app-input.component';
-import { SedeRequest } from '../models/sede.models';
+import { GerenteDropdownItem } from '../../gerentes/models/gerente.models';
+import { GerentesService } from '../../gerentes/services/gerentes.service';
+import { SedeRequest, SedeResponse } from '../models/sede.models';
 import { SedesService } from '../services/sedes.service';
 
 interface DistrictOption {
@@ -111,6 +113,7 @@ export class SedeFormPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sedesService = inject(SedesService);
+  private readonly gerentesService = inject(GerentesService);
   private readonly authService = inject(AuthService);
 
   private readonly routeId = this.parseRouteId(this.route.snapshot.paramMap.get('id'));
@@ -124,18 +127,21 @@ export class SedeFormPageComponent {
   protected readonly errorMessage = signal('');
   protected readonly pendingPayload = signal<SedeRequest | null>(null);
   protected readonly districtOptions = DISTRICT_OPTIONS;
+  protected readonly gerenteOptions = signal<GerenteDropdownItem[]>([]);
+  protected readonly gerenteOptionsLoading = signal(false);
+  protected readonly gerenteOptionsError = signal('');
+  protected readonly generatedSedeEmail = signal('');
   protected readonly weekDays = WEEK_DAYS;
   protected readonly selectedDayKey = signal<string>('lunes');
 
   protected readonly form = this.formBuilder.group({
     nombre: ['', [Validators.required, Validators.maxLength(100)]],
-    email: ['', [Validators.email, Validators.maxLength(100)]],
-    gerenteNombre: ['', [Validators.maxLength(100)]],
     direccion: ['', [Validators.maxLength(255)]],
     ubigeo: ['150101', [Validators.required, Validators.pattern(/^\d{6}$/)]],
-    telefono: ['', [Validators.maxLength(20)]],
+    telefono: ['', [Validators.required, Validators.pattern(/^9\d{8}$/)]],
     esAlmacenCentral: [false],
     estado: [true, [Validators.required]],
+    idGerente: ['', [Validators.required]],
     horario: this.formBuilder.group({
       lunes: this.createDayScheduleGroup(),
       martes: this.createDayScheduleGroup(),
@@ -148,6 +154,13 @@ export class SedeFormPageComponent {
   });
 
   constructor() {
+    this.loadGerentes();
+
+    this.form.controls.nombre.valueChanges.subscribe((nombre: string | null) => {
+      this.generatedSedeEmail.set(this.buildSedeEmailPreview(nombre ?? ''));
+    });
+    this.generatedSedeEmail.set(this.buildSedeEmailPreview(this.form.controls.nombre.value ?? ''));
+
     if (this.isEditMode()) {
       this.loadSede();
     }
@@ -163,27 +176,63 @@ export class SedeFormPageComponent {
     }
 
     const raw = this.form.getRawValue();
+
     const horarioConfig = this.buildHorarioConfig();
 
     if (!horarioConfig) {
       return;
     }
 
+    const idGerente = this.parseIdGerente(raw.idGerente);
+
     const payload: SedeRequest = {
       nombre: raw.nombre ?? '',
-      email: raw.email ?? '',
-      gerenteNombre: raw.gerenteNombre ?? '',
       direccion: raw.direccion ?? '',
       ubigeo: raw.ubigeo ?? '',
       telefono: raw.telefono ?? '',
       esAlmacenCentral: Boolean(raw.esAlmacenCentral),
       estado: this.normalizeEstado(raw.estado),
-      horarioConfig
+      horarioConfig,
+      idGerente: idGerente > 0 ? idGerente : null
     };
 
     this.pendingPayload.set(payload);
     this.approvalError.set('');
     this.approvalOpen.set(true);
+  }
+
+  protected displayGerenteLabel(item: GerenteDropdownItem): string {
+    return item.nombreCompleto;
+  }
+
+  protected gerenteSelectionDisabled(): boolean {
+    return this.gerenteOptionsLoading() || this.gerenteOptions().length === 0;
+  }
+
+  protected gerenteSelectionHelpText(): string {
+    if (this.gerenteOptionsLoading()) {
+      return 'Cargando gerentes activos...';
+    }
+
+    if (this.gerenteOptionsError().length > 0) {
+      return this.gerenteOptionsError();
+    }
+
+    if (this.gerenteOptions().length === 0) {
+      return 'No hay usuarios activos con rol GERENTE disponibles.';
+    }
+
+    return '';
+  }
+
+  protected selectedGerenteEmail(): string {
+    const selectedId = this.parseIdGerente(this.form.controls.idGerente.value);
+    if (selectedId <= 0) {
+      return '';
+    }
+
+    const gerente = this.gerenteOptions().find((item) => item.idUsuario === selectedId);
+    return gerente?.email?.trim() ?? '';
   }
 
   protected closeApprovalModal(): void {
@@ -248,6 +297,26 @@ export class SedeFormPageComponent {
     });
   }
 
+  private loadGerentes(): void {
+    this.gerenteOptionsLoading.set(true);
+    this.gerenteOptionsError.set('');
+
+    this.gerentesService
+      .getActiveGerenteOptions()
+      .pipe(finalize(() => this.gerenteOptionsLoading.set(false)))
+      .subscribe({
+      next: (data) => {
+        this.gerenteOptions.set(
+          [...data].sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto, 'es'))
+        );
+      },
+      error: () => {
+        this.gerenteOptions.set([]);
+        this.gerenteOptionsError.set('No se pudo cargar la lista de gerentes activos.');
+      }
+      });
+  }
+
   private loadSede(): void {
     if (this.routeId === null) {
       this.errorMessage.set('No se encontro un id de sede valido para editar.');
@@ -261,16 +330,20 @@ export class SedeFormPageComponent {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (sede) => {
+          const gerenteId = this.resolveGerenteIdFromResponse(sede);
+          this.ensureGerenteOptionAvailable(sede, gerenteId);
+
           this.form.patchValue({
             nombre: sede.nombre,
-            email: sede.email,
-            gerenteNombre: sede.gerenteNombre,
-            direccion: sede.direccion,
-            ubigeo: sede.ubigeo,
-            telefono: sede.telefono,
+            direccion: sede.direccion ?? '',
+            ubigeo: sede.ubigeo ?? '',
+            telefono: sede.telefono ?? '',
             esAlmacenCentral: sede.esAlmacenCentral,
-            estado: this.normalizeEstado(sede.estado)
+            estado: this.normalizeEstado(sede.estado),
+            idGerente: gerenteId > 0 ? String(gerenteId) : ''
           });
+
+          this.generatedSedeEmail.set(this.buildSedeEmailPreview(sede.nombre));
 
           this.patchHorarioFromConfig(sede.horarioConfig);
         },
@@ -287,11 +360,15 @@ export class SedeFormPageComponent {
       }
 
       if (error.status === 401) {
-        return 'Tu sesion expiro. Inicia sesion nuevamente.';
+        const msg = this.resolveBackendValidationMessage(error);
+        if (msg.includes('Datos de sede')) {
+          return 'Las credenciales de administrador no son válidas.';
+        }
+        return msg;
       }
 
       if (error.status === 403) {
-        return 'No tienes permisos para esta operacion.';
+        return 'El email ADMIN no coincide con el del administrador que inició sesión.';
       }
     }
 
@@ -307,7 +384,21 @@ export class SedeFormPageComponent {
       }
     }
 
-    return 'Datos de sede invalidos. Revisa los campos e intenta nuevamente.';
+    return 'Datos de sede invalidos. Revisa nombre, gerente seleccionado y horario. Si el email generado ya existe, usa otro nombre de sede.';
+  }
+
+  private buildSedeEmailPreview(nombre: string): string {
+    const normalizedName = nombre
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+    if (normalizedName.length === 0) {
+      return '';
+    }
+
+    return `sede.${normalizedName}@tiendasgo.com`;
   }
 
   private normalizeEstado(value: unknown): boolean {
@@ -330,10 +421,12 @@ export class SedeFormPageComponent {
     }
 
     const closed = Boolean(group.controls['cerrado'].value);
+    const currentOpen = String(group.controls['apertura'].value ?? '').trim();
+    const currentClose = String(group.controls['cierre'].value ?? '').trim();
     group.patchValue({
       cerrado: !closed,
-      apertura: closed ? group.controls['apertura'].value : '',
-      cierre: closed ? group.controls['cierre'].value : ''
+      apertura: closed ? (currentOpen.length > 0 ? currentOpen : '09:00') : '',
+      cierre: closed ? (currentClose.length > 0 ? currentClose : '22:00') : ''
     });
 
     group.markAsTouched();
@@ -431,13 +524,21 @@ export class SedeFormPageComponent {
     return horario;
   }
 
-  private patchHorarioFromConfig(config: string): void {
-    if (!config || config.trim().length === 0) {
+  private patchHorarioFromConfig(
+    config: Record<string, unknown> | string | null | undefined
+  ): void {
+    if (!config) {
       return;
     }
 
     try {
-      const parsed = JSON.parse(config) as Record<string, unknown>;
+      const parsed = typeof config === 'string'
+        ? (config.trim().length > 0 ? JSON.parse(config) as Record<string, unknown> : null)
+        : config;
+
+      if (!parsed) {
+        return;
+      }
 
       for (const day of WEEK_DAYS) {
         const item = parsed[day.key] as Record<string, unknown> | undefined;
@@ -451,8 +552,8 @@ export class SedeFormPageComponent {
         }
 
         const cerrado = this.toBoolean(item['cerrado']);
-        const apertura = this.toHourString(item['apertura']) ?? '09:00';
-        const cierre = this.toHourString(item['cierre']) ?? '22:00';
+        const apertura = cerrado ? '' : (this.toHourString(item['apertura']) ?? '09:00');
+        const cierre = cerrado ? '' : (this.toHourString(item['cierre']) ?? '22:00');
 
         group.patchValue({
           cerrado,
@@ -522,11 +623,18 @@ export class SedeFormPageComponent {
   private resolveAdminApprovalError(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 401) {
-        return 'Credenciales admin incorrectas.';
+        const body = error.error;
+        if (body && typeof body === 'object') {
+          const message = (body as Record<string, unknown>)['message'];
+          if (typeof message === 'string' && message.trim().length > 0) {
+            return message;
+          }
+        }
+        return 'El email o contraseña del administrador no son válidos.';
       }
 
       if (error.status === 403) {
-        return 'La cuenta admin no tiene permisos para aprobar.';
+        return 'El email ADMIN no coincide con el del administrador que inició sesión.';
       }
     }
 
@@ -544,5 +652,55 @@ export class SedeFormPageComponent {
 
     const parsed = Number(value);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  private parseIdGerente(value: unknown): number {
+    if (value === null || value === undefined || value === '') {
+      return 0;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isInteger(value) && value > 0 ? value : 0;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value.trim());
+      return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+    }
+
+    return 0;
+  }
+
+  private resolveGerenteIdFromResponse(sede: SedeResponse): number {
+    const idFromField = this.parseIdGerente(sede.idGerente);
+    if (idFromField > 0) {
+      return idFromField;
+    }
+
+    return this.parseIdGerente(sede.gerente?.idUsuario);
+  }
+
+  private ensureGerenteOptionAvailable(sede: SedeResponse, gerenteId: number): void {
+    if (gerenteId <= 0) {
+      return;
+    }
+
+    const exists = this.gerenteOptions().some((item) => item.idUsuario === gerenteId);
+    if (exists) {
+      return;
+    }
+
+    const nombre = sede.gerente?.nombreCompleto?.trim() || sede.gerenteNombre?.trim() || `Usuario #${gerenteId}`;
+    const email = sede.gerente?.email?.trim() || sede.gerenteEmail?.trim() || undefined;
+
+    this.gerenteOptions.update((items) => [
+      ...items,
+      {
+        idUsuario: gerenteId,
+        nombreCompleto: nombre,
+        email,
+        estado: sede.gerente?.estado
+      }
+    ]);
   }
 }

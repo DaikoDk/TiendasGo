@@ -214,7 +214,8 @@ export class AuthService {
     }
 
     const direct = this.readRole(
-      payload['rol'] ??
+      payload['roles'] ??
+        payload['rol'] ??
         payload['role'] ??
         payload['authority'] ??
         payload['authorities'] ??

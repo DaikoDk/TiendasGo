@@ -63,6 +63,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, ApiPaths.API_SEDES + "/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, ApiPaths.API_SEDES + "/**").hasRole("ADMIN")
 
+                        // Usuarios y subrecurso gerentes: solo ADMIN.
+                        .requestMatchers(HttpMethod.GET, ApiPaths.API_USUARIOS, ApiPaths.API_USUARIOS + "/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, ApiPaths.API_USUARIOS, ApiPaths.API_USUARIOS + "/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, ApiPaths.API_USUARIOS, ApiPaths.API_USUARIOS + "/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, ApiPaths.API_USUARIOS, ApiPaths.API_USUARIOS + "/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, ApiPaths.API_USUARIOS, ApiPaths.API_USUARIOS + "/**").hasRole("ADMIN")
+
+                        // Roles: solo ADMIN (por ahora se expone listado).
+                        .requestMatchers(HttpMethod.GET, ApiPaths.API_ROLES, ApiPaths.API_ROLES + "/**").hasRole("ADMIN")
+
                         // Catalog: solo ADMIN en todas las operaciones (incluye GET).
                         .requestMatchers(HttpMethod.GET, ApiPaths.API_CATALOG, ApiPaths.API_CATALOG + "/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, ApiPaths.API_CATALOG, ApiPaths.API_CATALOG + "/**").hasRole("ADMIN")
@@ -92,7 +102,7 @@ public class SecurityConfig {
         // frontend
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         // Authorization para el JWT)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));

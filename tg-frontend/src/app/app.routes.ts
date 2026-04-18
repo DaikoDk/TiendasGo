@@ -30,6 +30,16 @@ export const routes: Routes = [
 					import('./features/sedes/sedes.routes').then((m) => m.SEDES_ROUTES)
 			},
 			{
+				path: 'usuarios',
+				loadChildren: () =>
+					import('./features/gerentes/gerentes.routes').then((m) => m.GERENTES_ROUTES)
+			},
+			{
+				path: 'gerentes',
+				pathMatch: 'full',
+				redirectTo: 'usuarios'
+			},
+			{
 				path: 'inventario',
 				loadChildren: () =>
 					import('./features/inventario/inventario.routes').then(

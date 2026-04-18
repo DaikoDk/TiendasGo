@@ -54,9 +54,9 @@ public class SedeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> eliminarSede(@PathVariable("id") Integer idSede) {
+    public ResponseEntity<ApiResponse<Void>> eliminarSede(@PathVariable("id") Integer idSede) {
         sedeService.eliminarSede(idSede);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("Sede desactivada correctamente", null));
     }
 }
 

@@ -28,3 +28,24 @@ export const authChildGuard: CanActivateChildFn = (_route, state) => {
     queryParams: { returnUrl: state.url }
   });
 };
+
+export const adminGuard: CanActivateFn = (_route, state) => {
+  const tokenStorage = inject(TokenStorageService);
+  const router = inject(Router);
+
+  if (!tokenStorage.getToken()) {
+    return router.createUrlTree(['/login'], {
+      queryParams: { returnUrl: state.url }
+    });
+  }
+
+  if (tokenStorage.isAdmin()) {
+    return true;
+  }
+
+  return router.createUrlTree(['/dashboard'], {
+    queryParams: { accessDenied: '1' }
+  });
+};
+
+export const adminChildGuard: CanActivateChildFn = (_route, state) => adminGuard(_route, state);

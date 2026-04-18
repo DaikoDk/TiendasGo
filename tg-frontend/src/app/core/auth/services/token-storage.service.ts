@@ -53,11 +53,26 @@ export class TokenStorageService {
   getUserRole(): string | null {
     const user = this.getSessionUser();
     if (!user) {
-      return null;
+      return this.readRoleFromToken(this.getToken());
     }
 
     const normalized = user.rol.trim();
-    return normalized.length > 0 ? normalized : null;
+    return normalized.length > 0 ? normalized : this.readRoleFromToken(this.getToken());
+  }
+
+  isAdmin(): boolean {
+    const role = this.getUserRole();
+    if (!role) {
+      return false;
+    }
+
+    const normalized = this.normalizeRole(role);
+    return (
+      normalized === 'ADMIN' ||
+      normalized === 'ADMINISTRADOR' ||
+      normalized.includes('ADMINISTRADOR') ||
+      normalized.includes('ROLE_ADMIN')
+    );
   }
 
   clearSession(): void {
@@ -104,5 +119,81 @@ export class TokenStorageService {
     }
 
     return 0;
+  }
+
+  private readRoleFromToken(token: string | null): string | null {
+    if (!token) {
+      return null;
+    }
+
+    const payload = this.decodeJwtPayload(token);
+    if (!payload) {
+      return null;
+    }
+
+    const role = this.readRole(
+      payload['roles'] ??
+        payload['rol'] ??
+        payload['role'] ??
+        payload['authority'] ??
+        payload['authorities'] ??
+        payload['scope'] ??
+        payload['scopes']
+    );
+
+    return role.trim().length > 0 ? role : null;
+  }
+
+  private readRole(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const extracted = this.readRole(item);
+        if (extracted.trim().length > 0) {
+          return extracted;
+        }
+      }
+
+      return '';
+    }
+
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      return this.toString(
+        record['authority'] ?? record['role'] ?? record['rol'] ?? record['nombre'] ?? record['name']
+      );
+    }
+
+    return '';
+  }
+
+  private normalizeRole(value: string): string {
+    return value
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .replace(/^ROLE_/, '')
+      .replace(/\s+/g, '_');
+  }
+
+  private decodeJwtPayload(token: string): Record<string, unknown> | null {
+    const normalizedToken = token.replace(/^Bearer\s+/i, '').trim();
+    const parts = normalizedToken.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      const jsonPayload = atob(padded);
+      return JSON.parse(jsonPayload) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 }

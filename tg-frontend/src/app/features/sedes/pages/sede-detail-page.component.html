@@ -17,8 +17,14 @@
       <div class="mt-4 space-y-2 text-sm text-on-surface-variant">
         <p><span class="font-semibold text-on-surface">ID:</span> {{ data.idSede }}</p>
         <p><span class="font-semibold text-on-surface">Nombre:</span> {{ data.nombre }}</p>
-        <p><span class="font-semibold text-on-surface">Email:</span> {{ data.email }}</p>
-        <p><span class="font-semibold text-on-surface">Gerente:</span> {{ data.gerenteNombre }}</p>
+        <p><span class="font-semibold text-on-surface">Email:</span> {{ displaySedeEmail(data) }}</p>
+        <p><span class="font-semibold text-on-surface">Gerente:</span> {{ displayGerenteNombre(data) }}</p>
+        <p><span class="font-semibold text-on-surface">Email gerente:</span> {{ displayGerenteEmail(data) }}</p>
+        @if (data.idGerente) {
+          <p class="text-xs text-emerald-600 dark:text-emerald-400">
+            <span class="font-semibold">✓ Gerente asignado (ID: {{ data.idGerente }})</span>
+          </p>
+        }
         <p><span class="font-semibold text-on-surface">Direccion:</span> {{ data.direccion }}</p>
         <p><span class="font-semibold text-on-surface">Ubigeo:</span> {{ data.ubigeo }}</p>
         <p><span class="font-semibold text-on-surface">Telefono:</span> {{ data.telefono }}</p>

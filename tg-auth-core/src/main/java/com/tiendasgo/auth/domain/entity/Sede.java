@@ -6,6 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
@@ -34,8 +36,11 @@ public class Sede {
     @Column(name = "email", length = 100)
     private String email;
 
-    @Column(name = "gerente_nombre", length = 100)
-    private String gerenteNombre;
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "id_gerente")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Usuario gerente;
 
     @Column(name = "direccion", length = 255)
     private String direccion;

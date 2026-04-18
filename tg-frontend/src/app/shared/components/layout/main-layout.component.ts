@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
+import { map } from 'rxjs';
 import { LogOut, LucideAngularModule, UserRound } from 'lucide-angular';
 
 import { AuthService } from '../../../core/auth/services/auth.service';
@@ -17,9 +19,16 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 export class MainLayoutComponent {
   private readonly authService = inject(AuthService);
   private readonly tokenStorage = inject(TokenStorageService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly loggingOut = signal(false);
   protected readonly userDisplayName = signal(this.resolveUserName());
+  protected readonly accessDeniedMessage = toSignal(
+    this.route.queryParamMap.pipe(
+      map((params) => (params.get('accessDenied') === '1' ? 'No autorizado' : ''))
+    ),
+    { initialValue: '' }
+  );
   protected readonly icons = {
     LogOut,
     UserRound

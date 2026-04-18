@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { SedeRequest, SedeResponse } from '../models/sede.models';
+import { SedeGerenteInfo, SedeRequest, SedeResponse } from '../models/sede.models';
 
 @Injectable({
   providedIn: 'root'
@@ -86,51 +86,87 @@ export class SedesService {
 
   private toSedeResponse(raw: unknown): SedeResponse {
     const source = (raw ?? {}) as Record<string, unknown>;
+    const gerente = this.toSedeGerenteInfo(
+      source['gerente'] ?? source['gerenteUsuario'] ?? source['usuarioGerente']
+    );
+    const gerenteNombreLegacy = this.toNullableString(
+      this.toString(source['gerenteNombre'] ?? source['gerente_nombre'])
+    );
+    const gerenteEmailLegacy = this.toNullableString(
+      this.toString(source['gerenteEmail'] ?? source['gerente_email'])
+    );
+    const gerenteId = this.toNumberOrNull(
+      source['idGerente'] ?? source['id_gerente'] ?? gerente?.idUsuario
+    );
 
     return {
       idSede: this.toNumber(source['idSede'] ?? source['id_sede'] ?? source['id']),
       nombre: this.toString(source['nombre'] ?? source['nombre_sede']),
-      email: this.toString(source['email']),
-      gerenteNombre: this.toString(source['gerenteNombre'] ?? source['gerente_nombre']),
-      direccion: this.toString(source['direccion']),
-      ubigeo: this.toString(source['ubigeo']),
-      telefono: this.toString(source['telefono'] ?? source['telefono_sede']),
+      email: this.toNullableString(this.toString(source['email'])),
+      gerenteNombre: gerente?.nombreCompleto ?? gerenteNombreLegacy,
+      gerenteEmail: gerente?.email ?? gerenteEmailLegacy,
+      direccion: this.toNullableString(this.toString(source['direccion'])),
+      ubigeo: this.toNullableString(this.toString(source['ubigeo'])),
+      telefono: this.toNullableString(this.toString(source['telefono'] ?? source['telefono_sede'])),
       esAlmacenCentral: this.toBoolean(
         source['esAlmacenCentral'] ?? source['es_almacen_central']
       ),
       estado: this.toBoolean(source['estado']),
-      horarioConfig: this.toHorarioConfigString(source['horarioConfig'] ?? source['horario_config'])
+      horarioConfig: this.toHorarioConfigValue(source['horarioConfig'] ?? source['horario_config']),
+      idGerente: gerenteId,
+      gerente
     };
   }
 
   private toApiPayload(payload: SedeRequest): Record<string, unknown> {
     return {
       nombre: payload.nombre,
-      email: this.toNullableString(payload.email),
-      gerenteNombre: this.toNullableString(payload.gerenteNombre),
       direccion: this.toNullableString(payload.direccion),
       ubigeo: this.toNullableString(payload.ubigeo),
       telefono: this.toNullableString(payload.telefono),
       esAlmacenCentral: payload.esAlmacenCentral,
       estado: payload.estado,
-      horarioConfig: payload.horarioConfig
+      horarioConfig: payload.horarioConfig,
+      idGerente: payload.idGerente ?? null
     };
   }
 
-  private toHorarioConfigString(value: unknown): string {
+  private toSedeGerenteInfo(value: unknown): SedeGerenteInfo | null {
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
+
+    const source = value as Record<string, unknown>;
+    const idUsuario = this.toNumber(source['idUsuario'] ?? source['id_usuario'] ?? source['id']);
+    if (idUsuario <= 0) {
+      return null;
+    }
+
+    return {
+      idUsuario,
+      nombreCompleto: this.toString(
+        source['nombreCompleto'] ?? source['nombre_completo'] ?? source['nombre']
+      ),
+      email: this.toNullableString(this.toString(source['email'] ?? source['correo'])),
+      estado: this.toBoolean(source['estado'] ?? source['activo'])
+    };
+  }
+
+  private toHorarioConfigValue(value: unknown): Record<string, unknown> | string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
     if (typeof value === 'string') {
-      return value;
+      const normalized = value.trim();
+      return normalized.length > 0 ? value : null;
     }
 
     if (value && typeof value === 'object') {
-      try {
-        return JSON.stringify(value);
-      } catch {
-        return '';
-      }
+      return value as Record<string, unknown>;
     }
 
-    return '';
+    return null;
   }
 
   private toString(value: unknown): string {
@@ -150,9 +186,25 @@ export class SedesService {
     return 0;
   }
 
-  private toNullableString(value: string): string | null {
-    const normalized = value.trim();
+  private toNullableString(value: string | null | undefined): string | null {
+    const normalized = value?.trim() ?? '';
     return normalized.length > 0 ? normalized : null;
+  }
+
+  private toNumberOrNull(value: unknown): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+    return null;
   }
 
   private toBoolean(value: unknown): boolean {

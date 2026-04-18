@@ -34,16 +34,31 @@
   } @else {
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       @for (sede of sedes(); track sede.idSede) {
-        <app-card>
+        <app-card [borderVariant]="sede.estado ? 'active' : 'inactive'">
           <div class="space-y-3">
-            <h2 class="font-headline text-xl font-bold text-on-surface">{{ displayEmpty(sede.nombre) }}</h2>
+            <div class="flex items-start justify-between gap-2">
+              <h2 class="font-headline text-xl font-bold text-on-surface">{{ displayEmpty(sede.nombre) }}</h2>
+              @if (sede.esAlmacenCentral) {
+                <span
+                  class="inline-flex shrink-0 items-center rounded-full border border-primary/40 bg-primary/15 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-primary"
+                >
+                  Almacen central
+                </span>
+              }
+            </div>
 
             <div class="space-y-1 text-sm text-on-surface-variant">
-              <p><span class="font-semibold text-on-surface">Email:</span> {{ displayEmpty(sede.email) }}</p>
+              <p><span class="font-semibold text-on-surface">Email:</span> {{ displaySedeEmail(sede) }}</p>
               <p>
                 <span class="font-semibold text-on-surface">Gerente:</span>
-                {{ displayEmpty(sede.gerenteNombre) }}
+                {{ displayGerenteNombre(sede) }}
               </p>
+              <p><span class="font-semibold text-on-surface">Email gerente:</span> {{ displayGerenteEmail(sede) }}</p>
+              @if (sede.idGerente) {
+                <p class="text-xs text-emerald-600 dark:text-emerald-400">
+                  <span class="font-semibold">✓ Gerente asignado</span> (ID: {{ sede.idGerente }})
+                </p>
+              }
               <p>
                 <span class="font-semibold text-on-surface">Direccion:</span>
                 {{ displayEmpty(sede.direccion) }}
@@ -63,14 +78,6 @@
             <div class="flex items-center gap-3 pt-2 text-sm font-semibold">
               <a [routerLink]="['/dashboard/sedes/detalle', sede.idSede]" class="text-primary hover:underline">Detalle</a>
               <a [routerLink]="['/dashboard/sedes/editar', sede.idSede]" class="text-secondary hover:underline">Editar</a>
-              <button
-                type="button"
-                class="text-error hover:underline"
-                [disabled]="deletingId() === sede.idSede"
-                (click)="requestDeleteSede(sede.idSede)"
-              >
-                {{ deletingId() === sede.idSede ? 'Eliminando...' : 'Eliminar' }}
-              </button>
             </div>
           </div>
         </app-card>
@@ -82,14 +89,3 @@
     </div>
   }
 </section>
-
-<app-admin-approval-modal
-  [visible]="approvalOpen()"
-  [title]="'Aprobacion para eliminar sede'"
-  [message]="'Para eliminar una sede debes validar credenciales de administrador.'"
-  [confirmLabel]="'Aprobar y eliminar'"
-  [loading]="approvalLoading()"
-  [errorMessage]="approvalError()"
-  (approved)="approveDelete($event)"
-  (cancelled)="closeApprovalModal()"
-/>

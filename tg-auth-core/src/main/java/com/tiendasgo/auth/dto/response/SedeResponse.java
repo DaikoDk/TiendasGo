@@ -13,6 +13,8 @@ public class SedeResponse {
     private String nombre;
     private String email;
     private String gerenteNombre;
+    private Integer idGerente;
+    private String gerenteEmail;
     private String direccion;
     private String ubigeo;
     private String telefono;

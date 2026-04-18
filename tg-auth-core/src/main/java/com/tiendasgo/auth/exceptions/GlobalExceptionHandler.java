@@ -2,12 +2,16 @@ package com.tiendasgo.auth.exceptions;
 
 import com.tiendasgo.auth.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<Object>> handleCustomException(CustomException ex, HttpServletRequest request) {
@@ -30,7 +34,7 @@ public class GlobalExceptionHandler {
     // Error generic
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex, HttpServletRequest request) {
-        ex.printStackTrace();
+        LOGGER.error("Error no controlado en {}", request.getRequestURI(), ex);
         return buildResponse(500, "Internal Server Error", "Ocurrió un error inesperado en el servidor", request.getRequestURI());
     }
 

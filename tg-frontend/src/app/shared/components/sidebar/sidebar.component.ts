@@ -65,7 +65,8 @@ export class SidebarComponent {
         },
         {
           label: 'Usuarios',
-          icon: Users
+          icon: Users,
+          route: '/dashboard/usuarios'
         },
         {
           label: 'Roles',

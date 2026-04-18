@@ -26,6 +26,10 @@ export class AppInputComponent implements ControlValueAccessor {
   readonly type = input<'text' | 'email' | 'password' | 'tel'>('text');
   readonly icon = input('mail');
   readonly autocomplete = input('off');
+  readonly readonly = input(false);
+  readonly maxLength = input<number | null>(null);
+  readonly digitsOnly = input(false);
+  readonly requiredFirstDigit = input<string | null>(null);
 
   protected readonly value = signal('');
   protected readonly isDisabled = signal(false);
@@ -51,8 +55,28 @@ export class AppInputComponent implements ControlValueAccessor {
 
   protected handleInput(event: Event): void {
     const target = event.target as HTMLInputElement;
-    this.value.set(target.value);
-    this.onChange(target.value);
+    let nextValue = target.value;
+
+    if (this.digitsOnly()) {
+      nextValue = nextValue.replace(/\D+/g, '');
+    }
+
+    const firstDigit = this.requiredFirstDigit();
+    if (firstDigit && nextValue.length > 0 && nextValue[0] !== firstDigit) {
+      nextValue = '';
+    }
+
+    const maxLength = this.maxLength();
+    if (typeof maxLength === 'number' && maxLength > 0 && nextValue.length > maxLength) {
+      nextValue = nextValue.slice(0, maxLength);
+    }
+
+    if (target.value !== nextValue) {
+      target.value = nextValue;
+    }
+
+    this.value.set(nextValue);
+    this.onChange(nextValue);
   }
 
   protected handleBlur(): void {

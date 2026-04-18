@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { inject } from '@angular/core';
 
@@ -25,14 +25,30 @@ export class AdminApprovalModalComponent {
   readonly confirmLabel = input('Aprobar');
   readonly loading = input(false);
   readonly errorMessage = input('');
+  readonly prefilledEmail = input('');
 
   readonly approved = output<LoginRequest>();
   readonly cancelled = output<void>();
 
   protected readonly form = this.formBuilder.group({
-    email: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(4)]]
   });
+
+  constructor() {
+    effect(() => {
+      const isVisible = this.visible();
+      const email = this.prefilledEmail().trim();
+
+      if (isVisible && email.length > 0) {
+        this.form.controls.email.setValue(email, { emitEvent: false });
+      }
+
+      if (!isVisible) {
+        this.form.controls.password.setValue('', { emitEvent: false });
+      }
+    });
+  }
 
   protected submit(): void {
     if (this.form.invalid) {

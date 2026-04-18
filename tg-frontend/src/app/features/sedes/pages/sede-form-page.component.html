@@ -27,22 +27,56 @@
           autocomplete="organization"
         />
 
-        <app-input
-          formControlName="email"
-          label="Email"
-          placeholder="sede@tiendasgo.com"
-          type="email"
-          icon="mail"
-          autocomplete="email"
-        />
+        <div class="space-y-2">
+          <label class="block pl-1 font-label text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+            Email de sede
+          </label>
+          <input
+            type="text"
+            [value]="generatedSedeEmail()"
+            readonly
+            class="h-14 w-full cursor-not-allowed rounded-full border border-on-surface/15 bg-surface-container px-4 text-sm text-on-surface-variant focus:outline-none"
+            placeholder="sede.nombresede@tiendasgo.com"
+            aria-readonly="true"
+          />
+        </div>
 
-        <app-input
-          formControlName="gerenteNombre"
-          label="Gerente"
-          placeholder="Nombre del gerente"
-          icon="person"
-          autocomplete="name"
-        />
+        <div class="space-y-2">
+          <label class="block pl-1 font-label text-xs font-medium uppercase tracking-widest text-on-surface-variant">
+            Gerente asignado
+          </label>
+
+          <select
+            formControlName="idGerente"
+            [disabled]="gerenteSelectionDisabled()"
+            class="h-14 w-full rounded-full border border-on-surface/15 bg-surface-container-highest px-4 text-sm text-on-surface transition-all duration-300 focus:border-primary/60 focus:bg-surface-bright focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            @if (gerenteOptionsLoading()) {
+              <option value="">Cargando gerentes...</option>
+            } @else if (gerenteOptions().length === 0) {
+              <option value="">Sin gerente disponible</option>
+            } @else {
+              <option value="">Seleccionar gerente</option>
+              @for (gerente of gerenteOptions(); track gerente.idUsuario) {
+                <option [value]="gerente.idUsuario">{{ displayGerenteLabel(gerente) }}</option>
+              }
+            }
+          </select>
+
+          @if (gerenteSelectionHelpText().length > 0) {
+            <p class="pl-1 text-xs text-on-surface-variant">{{ gerenteSelectionHelpText() }}</p>
+          }
+
+          @if (selectedGerenteEmail().length > 0) {
+            <p class="pl-1 text-xs text-on-surface-variant">
+              Email del gerente seleccionado: <span class="font-semibold text-on-surface">{{ selectedGerenteEmail() }}</span>
+            </p>
+          }
+
+          @if (form.controls.idGerente.touched && form.controls.idGerente.invalid) {
+            <p class="pl-1 text-xs font-medium text-error">Debes seleccionar un gerente existente.</p>
+          }
+        </div>
 
         <app-input
           formControlName="direccion"
@@ -78,7 +112,15 @@
           placeholder="999888777"
           icon="phone"
           autocomplete="tel"
+          [maxLength]="9"
+          [digitsOnly]="true"
+          [requiredFirstDigit]="'9'"
         />
+        @if (form.controls.telefono.touched && form.controls.telefono.invalid) {
+          <p class="pl-1 text-xs font-medium text-error">
+            El teléfono debe iniciar con 9 y tener exactamente 9 dígitos.
+          </p>
+        }
 
         <div class="space-y-2">
           <label class="block pl-1 font-label text-xs font-medium uppercase tracking-widest text-on-surface-variant">

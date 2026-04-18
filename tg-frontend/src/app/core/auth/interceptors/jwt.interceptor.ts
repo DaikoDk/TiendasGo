@@ -3,12 +3,10 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
-import { AuthService } from '../services/auth.service';
 import { TokenStorageService } from '../services/token-storage.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenStorage = inject(TokenStorageService);
-  const authService = inject(AuthService);
   const token = tokenStorage.getToken();
 
   const isApiRequest = req.url.startsWith(environment.apiUrl);
@@ -35,20 +33,14 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(requestToHandle).pipe(
     catchError((error: unknown) => {
-      const requestAuthorization = requestToHandle.headers.get('Authorization') ?? '';
-      const usesSessionToken =
-        sessionAuthorization.length > 0 && requestAuthorization === sessionAuthorization;
-
-      if (
+      // Keep the current session and let each view handle 401/403 messages.
+      // This avoids unexpected redirects to /login while navigating guarded routes.
+      const _isRecoverableApiAuthError =
         error instanceof HttpErrorResponse &&
-        error.status === 401 &&
         isApiRequest &&
         !isLoginRequest &&
         !isLogoutRequest &&
-        (!requestAuthorization || usesSessionToken)
-      ) {
-        authService.logout().subscribe();
-      }
+        (error.status === 401 || error.status === 403);
 
       return throwError(() => error);
     })
