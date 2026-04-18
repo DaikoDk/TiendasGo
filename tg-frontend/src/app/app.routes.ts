@@ -25,31 +25,56 @@ export const routes: Routes = [
 			),
 		children: [
 			{
-				path: 'sedes',
+				path: 'administracion/sedes',
 				loadChildren: () =>
 					import('./features/sedes/sedes.routes').then((m) => m.SEDES_ROUTES)
 			},
 			{
-				path: 'usuarios',
+				path: 'administracion/usuarios',
 				loadChildren: () =>
 					import('./features/gerentes/gerentes.routes').then((m) => m.GERENTES_ROUTES)
 			},
 			{
-				path: 'gerentes',
+				path: 'administracion/gerentes',
 				pathMatch: 'full',
-				redirectTo: 'usuarios'
+				redirectTo: 'administracion/usuarios'
 			},
 			{
-				path: 'inventario',
+				path: 'logistica/inventario',
 				loadChildren: () =>
 					import('./features/inventario/inventario.routes').then(
 						(m) => m.INVENTARIO_ROUTES
 					)
 			},
 			{
-				path: 'compras',
+				path: 'compras/compras',
 				loadChildren: () =>
 					import('./features/compras/compras.routes').then((m) => m.COMPRAS_ROUTES)
+			},
+			{
+				path: 'sedes',
+				pathMatch: 'full',
+				redirectTo: 'administracion/sedes'
+			},
+			{
+				path: 'usuarios',
+				pathMatch: 'full',
+				redirectTo: 'administracion/usuarios'
+			},
+			{
+				path: 'gerentes',
+				pathMatch: 'full',
+				redirectTo: 'administracion/usuarios'
+			},
+			{
+				path: 'inventario',
+				pathMatch: 'full',
+				redirectTo: 'logistica/inventario'
+			},
+			{
+				path: 'compras',
+				pathMatch: 'full',
+				redirectTo: 'compras/compras'
 			}
 		]
 	},

@@ -1,6 +1,6 @@
 <section class="space-y-6">
   <a
-    routerLink="/dashboard/sedes"
+    routerLink="/dashboard/administracion/sedes"
     class="inline-flex items-center font-label text-sm font-semibold text-primary hover:underline"
   >
     Volver a sedes
@@ -55,8 +55,8 @@
       </div>
 
       <div class="mt-5 flex items-center gap-4 text-sm font-semibold">
-        <a [routerLink]="['/dashboard/sedes/editar', data.idSede]" class="text-secondary hover:underline">Editar</a>
-        <a routerLink="/dashboard/sedes" class="text-primary hover:underline">Volver al listado</a>
+        <a [routerLink]="['/dashboard/administracion/sedes/editar', data.idSede]" class="text-secondary hover:underline">Editar</a>
+        <a routerLink="/dashboard/administracion/sedes" class="text-primary hover:underline">Volver al listado</a>
       </div>
     }
   </app-card>

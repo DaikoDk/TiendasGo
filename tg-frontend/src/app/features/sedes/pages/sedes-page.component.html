@@ -8,7 +8,7 @@
     </div>
 
     <a
-      routerLink="/dashboard/sedes/nueva"
+      routerLink="/dashboard/administracion/sedes/nueva"
       class="inline-flex items-center rounded-full border border-on-surface/10 bg-surface-container px-4 py-2 font-label text-sm font-semibold text-primary hover:bg-surface-container-high"
     >
       Nueva sede
@@ -76,8 +76,8 @@
             </div>
 
             <div class="flex items-center gap-3 pt-2 text-sm font-semibold">
-              <a [routerLink]="['/dashboard/sedes/detalle', sede.idSede]" class="text-primary hover:underline">Detalle</a>
-              <a [routerLink]="['/dashboard/sedes/editar', sede.idSede]" class="text-secondary hover:underline">Editar</a>
+              <a [routerLink]="['/dashboard/administracion/sedes/detalle', sede.idSede]" class="text-primary hover:underline">Detalle</a>
+              <a [routerLink]="['/dashboard/administracion/sedes/editar', sede.idSede]" class="text-secondary hover:underline">Editar</a>
             </div>
           </div>
         </app-card>
