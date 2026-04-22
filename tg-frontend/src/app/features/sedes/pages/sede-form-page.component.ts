@@ -285,11 +285,11 @@ export class SedeFormPageComponent {
       next: (sede) => {
         const targetId = sede.idSede > 0 ? sede.idSede : (this.routeId ?? 0);
         if (targetId > 0) {
-          void this.router.navigate(['/dashboard/sedes/detalle', targetId]);
+          void this.router.navigate(['/dashboard/administracion/sedes/detalle', targetId]);
           return;
         }
 
-        void this.router.navigate(['/dashboard/sedes']);
+        void this.router.navigate(['/dashboard/administracion/sedes']);
       },
       error: (error: unknown) => {
         this.errorMessage.set(this.resolveError(error));

@@ -26,7 +26,7 @@ export class GerentesPageComponent {
   }
 
   protected selectRol(rol: RolResponse): void {
-    void this.router.navigate(['/dashboard/usuarios', rol.nombre.toLowerCase()]);
+    void this.router.navigate(['/dashboard/administracion/usuarios', rol.nombre.toLowerCase()]);
   }
 
   private loadRoles(): void {

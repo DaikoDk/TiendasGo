@@ -203,11 +203,11 @@ export class GerenteFormPageComponent {
           this.statusMessage.set(response.message || 'Gerente guardado.');
           const id = response.data?.idUsuario ?? 0;
           if (id > 0) {
-            void this.router.navigate(['/dashboard/usuarios/detalle', id]);
+            void this.router.navigate(['/dashboard/administracion/usuarios/detalle', id]);
             return;
           }
 
-          void this.router.navigate(['/dashboard/usuarios']);
+          void this.router.navigate(['/dashboard/administracion/usuarios']);
         },
         error: (error: unknown) => {
           const message = this.resolveCreateError(error);
@@ -239,11 +239,11 @@ export class GerenteFormPageComponent {
           this.statusMessage.set(response.message || 'Gerente guardado.');
           const id = response.data?.idUsuario ?? this.routeId ?? 0;
           if (id > 0) {
-            void this.router.navigate(['/dashboard/usuarios/detalle', id]);
+            void this.router.navigate(['/dashboard/administracion/usuarios/detalle', id]);
             return;
           }
 
-          void this.router.navigate(['/dashboard/usuarios']);
+          void this.router.navigate(['/dashboard/administracion/usuarios']);
         },
         error: (error: unknown) => {
           this.errorMessage.set(readApiErrorMessage(error, 'No se pudo guardar el gerente.'));
