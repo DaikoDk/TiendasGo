@@ -21,6 +21,9 @@ public class Marca {
 
     @Column(name = "codigo_marca", length = 3)
     private String codigoMarca;
+
+    @Column(name = "estado")
+    private Boolean activo;
 }
 
 

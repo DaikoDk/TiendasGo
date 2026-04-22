@@ -26,8 +26,9 @@ public class Categoria {
     @Column(name = "nombre", nullable = false, length = 50)
     private String nombre;
 
-    @Column(name = "prefijo", length = 3)
+    @Column(name = "prefijo", length = 3, columnDefinition = "CHAR(3)")
     private String prefijo;
+
 
     @Column(name = "estado")
     private Boolean activo;
