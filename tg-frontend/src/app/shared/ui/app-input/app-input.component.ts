@@ -25,6 +25,7 @@ export class AppInputComponent implements ControlValueAccessor {
   readonly placeholder = input('');
   readonly type = input<'text' | 'email' | 'password' | 'tel'>('text');
   readonly icon = input('mail');
+  readonly size = input<'normal' | 'sm'>('normal');
   readonly autocomplete = input('off');
   readonly readonly = input(false);
   readonly maxLength = input<number | null>(null);

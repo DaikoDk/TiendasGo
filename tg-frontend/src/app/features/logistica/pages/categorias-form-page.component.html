@@ -1,0 +1,24 @@
+<section class="space-y-6">
+  <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-2">
+      <h1 class="font-headline text-3xl font-extrabold text-on-surface">{{ pageTitle() }}</h1>
+      <p class="font-body text-sm text-on-surface-variant">Crea o edita una categoría.</p>
+    </div>
+  </header>
+
+  @if (error().length > 0) {
+    <p class="text-sm font-medium text-error" role="alert">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid gap-4 max-w-xl">
+    <app-input formControlName="nombre" label="Nombre" placeholder="Nombre de la categoría" />
+
+
+    <div class="flex gap-2">
+      <button type="button" (click)="onCancel()" class="h-12 rounded-full border border-on-surface/10 bg-surface-container px-5 font-semibold">Cancelar</button>
+      <button type="submit" class="h-12 rounded-full border border-on-surface/10 bg-primary px-5 font-semibold text-on-primary-fixed">{{ submitLabel() }}</button>
+    </div>
+  </form>
+
+  <app-admin-approval-modal [visible]="approvalVisible()" [loading]="approvalLoading()" [errorMessage]="approvalError()" (approved)="onAdminApproved($event)" (cancelled)="onAdminCancelled()"></app-admin-approval-modal>
+</section>

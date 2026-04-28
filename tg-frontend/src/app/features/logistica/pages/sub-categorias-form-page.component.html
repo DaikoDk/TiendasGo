@@ -1,0 +1,62 @@
+<section class="space-y-6">
+  <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-2">
+      <h1 class="font-headline text-3xl font-extrabold text-on-surface">{{ pageTitle() }}</h1>
+      <p class="font-body text-sm text-on-surface-variant">Crea o edita una subcategoría.</p>
+    </div>
+  </header>
+
+  @if (error().length > 0) {
+    <p class="text-sm font-medium text-error" role="alert">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid gap-4 max-w-xl">
+
+    <div class="flex flex-col gap-1.5">
+      <label class="font-label text-sm font-medium text-on-surface-variant">
+        Categoría padre
+      </label>
+      <div class="relative">
+        <select
+          formControlName="idCategoria"
+          class="w-full h-11 appearance-none bg-surface border border-on-surface/20 rounded-md
+                 pl-3.5 pr-10 text-sm text-on-surface cursor-pointer outline-none
+                 focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"
+        >
+          <option [ngValue]="null" class="text-on-surface-variant">Seleccione una categoría</option>
+          @for (cat of categoriasActivas(); track cat.id) {
+            <option [value]="cat.id">{{ cat.nombre }}</option>
+          }
+        </select>
+        <svg
+          class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+
+    <app-input formControlName="nombre" label="Nombre" placeholder="Nombre de la subcategoría" />
+
+    <div class="flex gap-2">
+      <button type="button" (click)="onCancel()"
+              class="h-12 rounded-full border border-on-surface/10 bg-surface-container px-5 font-semibold">
+        Cancelar
+      </button>
+      <button type="submit"
+              class="h-12 rounded-full border border-on-surface/10 bg-primary px-5 font-semibold text-on-primary-fixed">
+        {{ submitLabel() }}
+      </button>
+    </div>
+
+  </form>
+
+  <app-admin-approval-modal
+    [visible]="approvalVisible()"
+    [loading]="approvalLoading()"
+    [errorMessage]="approvalError()"
+    (approved)="onAdminApproved($event)"
+    (cancelled)="onAdminCancelled()">
+  </app-admin-approval-modal>
+</section>

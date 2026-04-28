@@ -1,0 +1,60 @@
+<section class="space-y-6">
+  <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-2">
+      <h1 class="font-headline text-3xl font-extrabold text-on-surface">Marcas</h1>
+      <p class="font-body text-sm text-on-surface-variant">Administra marcas con filtros, paginación y edición segura.</p>
+    </div>
+
+    <a routerLink="/dashboard/logistica/marcas/nueva" class="inline-flex items-center rounded-full border border-on-surface/10 bg-surface-container px-4 py-2 font-label text-sm font-semibold text-primary hover:bg-surface-container-high">Nueva marca</a>
+  </header>
+
+  <form [formGroup]="filterForm" class="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+    <div class="grid gap-4 md:grid-cols-2">
+      <app-input formControlName="nombre" label="Nombre" placeholder="Buscar por nombre" icon="search" />
+      <app-input formControlName="codigo" label="Código" placeholder="Buscar por código" icon="badge" />
+    </div>
+
+    <button type="button" (click)="onResetFilters()" class="h-12 rounded-full border border-on-surface/10 bg-surface-container px-5 font-semibold text-on-surface transition hover:bg-surface-container-high">Limpiar</button>
+  </form>
+
+  <div class="overflow-x-auto rounded-2xl bg-surface-container-highest shadow-sm p-4">
+    <table class="w-full table-fixed">
+      <thead>
+        <tr class="border-b border-white/6">
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:25%">ID</th>
+          <th class="px-3 py-2 text-left font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:25%">Nombre</th>
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:25%">Código</th>
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:25%">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-white/5 bg-transparent">
+        @if (loading()) {
+          <tr>
+            <td colspan="4" class="px-3 py-12 text-center text-on-surface-variant">Cargando marcas...</td>
+          </tr>
+        } @else {
+          @for (marca of pagedMarcas(); track marca.id) {
+            <tr class="group transition duration-200 hover:bg-surface-bright/60">
+              <td class="px-3 py-4 font-body text-primary-fixed-dim font-medium text-center align-middle">#{{ marca.id }}</td>
+              <td class="px-3 py-4 font-headline font-semibold text-base text-on-surface align-middle">{{ marca.nombre }}</td>
+              <td class="px-3 py-4 text-center align-middle">{{ marca.codigoMarca }}</td>
+              <td class="px-3 py-4 align-middle">
+                <div class="flex items-center justify-center gap-3">
+                  <a [routerLink]="['/dashboard/logistica/marcas/editar', marca.id]" class="inline-flex h-10 items-center rounded-full border border-on-surface/10 bg-surface-container px-4 text-sm font-semibold text-primary hover:bg-surface-container-high">Editar</a>
+                  <button type="button" (click)="onDeleteClick(marca)" class="inline-flex h-10 items-center rounded-full border border-rose-500/20 bg-rose-500/5 px-4 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">Borrar</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="px-3 py-12 text-center text-on-surface-variant">No se encontraron marcas con estos filtros.</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-admin-approval-modal [visible]="approvalVisible()" [loading]="approvalLoading()" [errorMessage]="approvalError()" (approved)="onAdminApproved($event)" (cancelled)="onAdminCancelled()"></app-admin-approval-modal>
+</section>

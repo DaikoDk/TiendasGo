@@ -1,0 +1,75 @@
+<section class="space-y-6">
+  <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div class="space-y-2">
+      <h1 class="font-headline text-3xl font-extrabold text-on-surface">Categorías</h1>
+      <p class="font-body text-sm text-on-surface-variant">Gestiona categorías y sus subcategorías.</p>
+    </div>
+
+    <a *ngIf="isAdmin()" routerLink="/dashboard/logistica/categorias/nueva" class="inline-flex items-center rounded-full border border-on-surface/10 bg-surface-container px-4 py-2 font-label text-sm font-semibold text-primary hover:bg-surface-container-high">Nueva categoría</a>
+  </header>
+
+  <form [formGroup]="filterForm" class="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+    <div class="grid gap-4 md:grid-cols-2">
+      <app-input formControlName="nombre" label="Nombre" placeholder="Buscar por nombre" icon="search" />
+      <app-input formControlName="prefijo" label="Prefijo" placeholder="Buscar por prefijo" icon="badge" />
+    </div>
+
+    <button type="button" (click)="onResetFilters()" class="h-12 rounded-full border border-on-surface/10 bg-surface-container px-5 font-semibold text-on-surface transition hover:bg-surface-container-high">Limpiar</button>
+  </form>
+
+  <div class="overflow-x-auto rounded-2xl bg-surface-container-highest shadow-sm p-4">
+    <table class="w-full table-fixed">
+      <thead>
+        <tr class="border-b border-white/6">
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:20%">ID</th>
+          <th class="px-3 py-2 text-left font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:20%">Nombre</th>
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:20%">Prefijo</th>
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:20%">Estado</th>
+          <th class="px-3 py-2 text-center font-headline text-[0.72rem] font-bold uppercase tracking-[0.12em] text-on-surface-variant" style="width:20%">Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-white/5 bg-transparent">
+        @if (loading()) {
+          <tr>
+            <td colspan="5" class="px-3 py-12 text-center text-on-surface-variant">Cargando categorías...</td>
+          </tr>
+        } @else {
+          @for (cat of categorias(); track cat.id) {
+            <tr class="group transition duration-200 hover:bg-surface-bright/60">
+              <td class="px-3 py-4 font-body text-primary-fixed-dim font-medium text-center align-middle">#{{ cat.id }}</td>
+              <td class="px-3 py-4 font-headline font-semibold text-base text-on-surface align-middle">{{ cat.nombre }}</td>
+              <td class="px-3 py-4 text-center align-middle">{{ cat.prefijo }}</td>
+              <td class="px-3 py-4 text-center align-middle">{{ cat.estado ? 'Activo' : 'Inactivo' }}</td>
+              <td class="px-3 py-4 align-middle">
+                <div class="flex items-center justify-center gap-3" *ngIf="isAdmin()">
+                  <a [routerLink]="['/dashboard/logistica/categorias/editar', cat.id]" class="inline-flex h-10 items-center rounded-full border border-on-surface/10 bg-surface-container px-4 text-sm font-semibold text-primary hover:bg-surface-container-high">Editar</a>
+                  <button type="button" (click)="onDeleteClick(cat)" class="inline-flex h-10 items-center rounded-full border border-rose-500/20 bg-rose-500/5 px-4 text-sm font-semibold text-rose-200 hover:bg-rose-500/10">Borrar</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-3 py-12 text-center text-on-surface-variant">No se encontraron categorías.</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="pendingForceConfirm()" class="p-4">
+    <div class="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4 flex items-center justify-between gap-4">
+      <div>
+        <p class="font-semibold">Existen {{ cascadeCount() }} subcategorías activas.</p>
+        <p class="text-sm text-on-surface-variant">Confirma para inactivar la categoría y las subcategorías en cascada.</p>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" (click)="cancelCascade()" class="h-10 rounded-full border border-on-surface/10 bg-surface-container px-4 text-sm font-semibold">Cancelar</button>
+        <button type="button" (click)="confirmCascade()" class="h-10 rounded-full border border-rose-500/20 bg-rose-500/5 px-4 text-sm font-semibold text-rose-200">Confirmar inactivar en cascada</button>
+      </div>
+    </div>
+  </div>
+
+  <app-admin-approval-modal [visible]="approvalVisible()" [loading]="approvalLoading()" [errorMessage]="approvalError()" (approved)="onAdminApproved($event)" (cancelled)="onAdminCancelled()"></app-admin-approval-modal>
+</section>
