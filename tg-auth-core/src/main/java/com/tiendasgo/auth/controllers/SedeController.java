@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,11 +29,20 @@ public class SedeController {
     private final ISedeService sedeService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<SedeResponse>>> listarSedes() {
         return ResponseEntity.ok(ApiResponse.success("Sedes obtenidas correctamente", sedeService.listarSedes()));
     }
 
+    @GetMapping("/generar-email")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> generarEmail(@RequestParam("nombre") String nombre) {
+        String email = sedeService.generarEmailSede(nombre);
+        return ResponseEntity.ok(ApiResponse.success("Email generado correctamente", email));
+    }
+
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<SedeResponse>> obtenerSede(@PathVariable("id") Integer idSede) {
         return ResponseEntity.ok(ApiResponse.success("Sede obtenida correctamente", sedeService.obtenerSedePorId(idSede)));
     }
@@ -45,6 +55,7 @@ public class SedeController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<SedeResponse>> actualizarSede(
         @PathVariable("id") Integer idSede,
         @Valid @RequestBody SedeRequest request
@@ -59,4 +70,3 @@ public class SedeController {
         return ResponseEntity.ok(ApiResponse.success("Sede desactivada correctamente", null));
     }
 }
-

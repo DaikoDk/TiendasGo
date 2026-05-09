@@ -2,7 +2,6 @@ package com.tiendasgo.auth.dto.request;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.tiendasgo.auth.validation.ValidHorarioConfig;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -20,22 +19,9 @@ public class SedeRequest {
     @Size(max = 100, message = "El nombre no debe exceder 100 caracteres")
     private String nombre;
 
-    @Email(message = "El email debe tener un formato valido")
-    @Size(max = 100, message = "El email no debe exceder 100 caracteres")
-    private String email;
-
-    @Size(max = 100, message = "El nombre del gerente no debe exceder 100 caracteres")
-    private String gerenteNombre;
-
     @Positive(message = "El idGerente debe ser mayor a cero")
     private Integer idGerente;
 
-    @NotBlank(message = "El email del gerente es obligatorio")
-    @Email(message = "El email del gerente debe tener un formato valido")
-    @Size(max = 100, message = "El email del gerente no debe exceder 100 caracteres")
-    private String gerenteEmail;
-
-    @Size(max = 255, message = "La direccion no debe exceder 255 caracteres")
     @Size(max = 255, message = "La direccion no debe exceder 255 caracteres")
     private String direccion;
 

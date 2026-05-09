@@ -97,7 +97,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	@Override
 	@Transactional
 	public UsuarioResponse actualizarGerente(Integer idGerente, UsuarioGerenteRequest request) {
-		Usuario gerente = usuarioRepository.findByIdUsuarioAndRolNombreIgnoreCase(idGerente, ROL_GERENTE)
+        Usuario gerente = usuarioRepository.findByIdUsuarioAndRolNombreIgnoreCaseAndEstadoTrue(idGerente, ROL_GERENTE)
 			.orElseThrow(() -> new CustomException("Gerente no encontrado", HttpStatus.NOT_FOUND));
 
 		gerente.setNombreCompleto(buildNombreCompleto(request));
@@ -115,8 +115,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
 		return toResponse(usuarioRepository.save(gerente));
 	}
 
-	@Override
-	public UsuarioResponse actualizarEstado(Integer idUsuario, Boolean estado) {
+    @Override
+    @Transactional
+    public UsuarioResponse actualizarEstado(Integer idUsuario, Boolean estado) {
 		if (estado == null) {
 			throw new CustomException("El estado es obligatorio", HttpStatus.BAD_REQUEST);
 		}
@@ -127,8 +128,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
 		return toResponse(usuarioRepository.save(usuario));
 	}
 
-	@Override
-	public void eliminarUsuario(Integer idUsuario) {
+    @Override
+    @Transactional
+    public void eliminarUsuario(Integer idUsuario) {
 		Usuario usuario = usuarioRepository.findById(idUsuario)
 			.orElseThrow(() -> new CustomException("Usuario no encontrado", HttpStatus.NOT_FOUND));
 		usuario.setEstado(Boolean.FALSE);

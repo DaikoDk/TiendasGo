@@ -19,7 +19,7 @@ public class UserDetailsCustom implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String nombreRol = usuario.getRol().getNombre() == null
+        String nombreRol = usuario.getRol() == null || usuario.getRol().getNombre() == null
             ? ""
             : usuario.getRol().getNombre().trim().toUpperCase(Locale.ROOT).replace(' ', '_');
 

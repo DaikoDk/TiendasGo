@@ -15,5 +15,7 @@ public interface ISedeService {
     SedeResponse actualizarSede(Integer idSede, SedeRequest request);
 
     void eliminarSede(Integer idSede);
+
+    String generarEmailSede(String nombreSede);
 }
 
