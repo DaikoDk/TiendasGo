@@ -12,7 +12,6 @@ public class CategoriaMapper {
         if (req == null) return null;
         return Categoria.builder()
                 .nombre(req.getNombre())
-                .prefijo(req.getPrefijo())
                 .activo(Boolean.TRUE)
                 .build();
     }

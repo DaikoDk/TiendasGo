@@ -18,4 +18,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
     @Query("SELECT COALESCE(MAX(p.id), 0) FROM Producto p WHERE p.marca.id = :idMarca AND p.subCategoria.id = :idSubCategoria")
     Integer findMaxIdByMarcaAndSubCategoria(@Param("idMarca") Integer idMarca, @Param("idSubCategoria") Integer idSubCategoria);
+
+    boolean existsBySubCategoriaIdAndEstadoTrue(Integer subCategoriaId);
 }

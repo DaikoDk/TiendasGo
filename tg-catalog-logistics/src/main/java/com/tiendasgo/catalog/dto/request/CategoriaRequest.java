@@ -14,7 +14,5 @@ public class CategoriaRequest {
     @Size(max = 50)
     private String nombre;
 
-    @Size(max = 3)
-    private String prefijo;
 }
 

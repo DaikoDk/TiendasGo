@@ -15,9 +15,6 @@ public class MarcaRequest {
     @Size(max = 50)
     private String nombre;
 
-    @Size(max = 3)
-    private String codigoMarca;
-
     private Boolean activo;
 }
 

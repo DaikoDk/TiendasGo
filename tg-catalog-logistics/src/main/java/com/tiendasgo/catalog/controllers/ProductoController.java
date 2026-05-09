@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/catalog/productos")
-@CrossOrigin
 @RequiredArgsConstructor
 public class ProductoController {
 
@@ -45,6 +44,7 @@ public class ProductoController {
     }
 
     @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> cambiarEstado(
             @PathVariable Integer id,
             @RequestParam Boolean activo) {
