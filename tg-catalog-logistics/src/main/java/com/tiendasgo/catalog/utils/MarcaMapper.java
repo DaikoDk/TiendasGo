@@ -12,7 +12,6 @@ public class MarcaMapper {
         if (req == null) return null;
         return Marca.builder()
                 .nombre(req.getNombre())
-                .codigoMarca(req.getCodigoMarca())
                 .activo(req.getActivo() != null ? req.getActivo() : true)
                 .build();
     }

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(InvalidPriceException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidPrice(InvalidPriceException ex, HttpServletRequest req) {
         Map<String, Object> body = buildBody(req, "Bad Request", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
@@ -49,6 +50,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    @ExceptionHandler(ActiveProductsException.class)
+    public ResponseEntity<Map<String, Object>> handleActiveProducts(ActiveProductsException ex, HttpServletRequest req) {
+        Map<String, Object> body = buildBody(req, "Conflict", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
         String details = ex.getBindingResult().getFieldErrors().stream()
@@ -65,6 +72,12 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         Map<String, Object> body = buildBody(req, "Bad Request", details);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(CodigoMarcaExhaustedException.class)
+    public ResponseEntity<Map<String, Object>> handleCodigoExhausted(CodigoMarcaExhaustedException ex, HttpServletRequest req) {
+        Map<String, Object> body = buildBody(req, "Conflict", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

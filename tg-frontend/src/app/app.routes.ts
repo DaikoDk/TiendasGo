@@ -11,7 +11,7 @@ export const routes: Routes = [
 	{
 		path: 'login',
 		loadComponent: () =>
-			import('./features/auth/pages/login-page.component').then(
+			import('./features/auth/login/pages/login-page.component').then(
 				(m) => m.LoginPageComponent
 			)
 	},
@@ -27,12 +27,12 @@ export const routes: Routes = [
 			{
 				path: 'administracion/sedes',
 				loadChildren: () =>
-					import('./features/sedes/sedes.routes').then((m) => m.SEDES_ROUTES)
+					import('./features/auth/sedes/sedes.routes').then((m) => m.SEDES_ROUTES)
 			},
 			{
 				path: 'administracion/usuarios',
 				loadChildren: () =>
-					import('./features/gerentes/gerentes.routes').then((m) => m.GERENTES_ROUTES)
+					import('./features/auth/usuarios/gerentes/gerentes.routes').then((m) => m.GERENTES_ROUTES)
 			},
 			{
 				path: 'administracion/gerentes',
@@ -47,29 +47,29 @@ export const routes: Routes = [
 					{
 						path: 'marcas',
 						loadChildren: () =>
-							import('./features/logistica/marcas.routes').then((m) => m.MARCAS_ROUTES)
+							import('./features/catalog/marcas/marcas.routes').then((m) => m.MARCAS_ROUTES)
 					},
 					{
 						path: 'productos',
 						loadChildren: () =>
-							import('./features/logistica/productos.routes').then((m) => m.PRODUCTOS_ROUTES)
+							import('./features/catalog/productos/productos.routes').then((m) => m.PRODUCTOS_ROUTES)
 					},
 					{
 						path: 'categorias',
 						loadChildren: () =>
-							import('./features/logistica/categorias.routes').then((m) => m.CATEGORIAS_ROUTES)
+							import('./features/catalog/categorias/categorias.routes').then((m) => m.CATEGORIAS_ROUTES)
 					},
 					{
 						path: 'sub-categorias',
 						loadChildren: () =>
-							import('./features/logistica/sub-categorias.routes').then((m) => m.SUBCATEGORIAS_ROUTES)
+							import('./features/catalog/subcategorias/sub-categorias.routes').then((m) => m.SUBCATEGORIAS_ROUTES)
 					}
 				]
 			},
 			{
 				path: 'compras/compras',
 				loadChildren: () =>
-					import('./features/compras/compras.routes').then((m) => m.COMPRAS_ROUTES)
+					import('./features/purchases/compras.routes').then((m) => m.COMPRAS_ROUTES)
 			},
 			{
 				path: 'sedes',
@@ -85,11 +85,6 @@ export const routes: Routes = [
 				path: 'gerentes',
 				pathMatch: 'full',
 				redirectTo: 'administracion/usuarios'
-			},
-			{
-				path: 'inventario',
-				pathMatch: 'full',
-				redirectTo: 'logistica/inventario'
 			},
 			{
 				path: 'compras',

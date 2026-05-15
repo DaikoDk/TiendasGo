@@ -25,6 +25,7 @@ public class SedeServiceImpl implements ISedeService {
     private final UsuarioRepository usuarioRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<SedeResponse> listarSedes() {
         return sedeRepository.findAll().stream()
             .map(SedeMapper::toResponse)
@@ -32,6 +33,7 @@ public class SedeServiceImpl implements ISedeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SedeResponse obtenerSedePorId(Integer idSede) {
         Sede sede = sedeRepository.findById(idSede)
             .orElseThrow(() -> new CustomException("Sede no encontrada", HttpStatus.NOT_FOUND));
@@ -41,14 +43,15 @@ public class SedeServiceImpl implements ISedeService {
     @Override
     @Transactional
     public SedeResponse crearSede(SedeRequest request) {
+        if (request.getIdGerente() == null) {
+            throw new CustomException("Debe asignar un gerente a la sede", HttpStatus.BAD_REQUEST);
+        }
         Sede sede = new Sede();
         aplicarDatosRequest(sede, request);
         sede = sedeRepository.save(sede);
 
-        if (request.getIdGerente() != null) {
-            asignarGerenteASede(sede, request.getIdGerente());
-            sede = sedeRepository.save(sede);
-        }
+        asignarGerenteASede(sede, request.getIdGerente());
+        sede = sedeRepository.save(sede);
 
         return SedeMapper.toResponse(sede);
     }
@@ -70,14 +73,16 @@ public class SedeServiceImpl implements ISedeService {
         return SedeMapper.toResponse(sedeRepository.save(sede));
     }
 
+    @Override
+    public String generarEmailSede(String nombreSede) {
+        return generarEmailSedeUnico(nombreSede, null);
+    }
+
     private void aplicarDatosRequest(Sede sede, SedeRequest request) {
         String nombreSede = normalizeText(request.getNombre());
         sede.setNombre(nombreSede);
 
-
-        // El email de la sede siempre se genera en backend para mantener consistencia.
-        String emailSede = generarEmailSede(nombreSede);
-        validarEmailSedeUnico(emailSede, sede.getIdSede());
+        String emailSede = generarEmailSedeUnico(nombreSede, sede.getIdSede());
         sede.setEmail(emailSede);
 
         sede.setDireccion(normalizeText(request.getDireccion()));
@@ -94,7 +99,27 @@ public class SedeServiceImpl implements ISedeService {
         return value == null ? null : value.trim();
     }
 
-    private String generarEmailSede(String nombreSede) {
+    private String generarEmailSedeUnico(String nombreSede, Integer idSedeActual) {
+        String baseEmail = generarEmailBase(nombreSede);
+        String email = baseEmail;
+        int sufijo = 1;
+
+        while (true) {
+            boolean existe = idSedeActual == null
+                ? sedeRepository.existsByEmailIgnoreCase(email)
+                : sedeRepository.existsByEmailIgnoreCaseAndIdSedeNot(email, idSedeActual);
+
+            if (!existe) {
+                return email;
+            }
+
+            sufijo++;
+            int atPos = baseEmail.indexOf('@');
+            email = baseEmail.substring(0, atPos) + sufijo + baseEmail.substring(atPos);
+        }
+    }
+
+    private String generarEmailBase(String nombreSede) {
         String slug = slugSede(nombreSede);
         return "sede." + slug + "@tiendasgo.com";
     }
@@ -115,16 +140,6 @@ public class SedeServiceImpl implements ISedeService {
             .trim();
 
         return limpio.isBlank() ? "sede" : limpio;
-    }
-
-    private void validarEmailSedeUnico(String emailSede, Integer idSedeActual) {
-        boolean existe = idSedeActual == null
-            ? sedeRepository.existsByEmailIgnoreCase(emailSede)
-            : sedeRepository.existsByEmailIgnoreCaseAndIdSedeNot(emailSede, idSedeActual);
-
-        if (existe) {
-            throw new CustomException("El email de sede generado ya existe: " + emailSede, HttpStatus.BAD_REQUEST);
-        }
     }
 
     private Usuario resolveGerente(Integer idGerente) {
@@ -150,26 +165,28 @@ public class SedeServiceImpl implements ISedeService {
     private void asignarGerenteASede(Sede sede, Integer idGerente) {
         Usuario gerente = resolveGerente(idGerente);
 
-        // Desasignar el gerente anterior si existe
-        Sede sedeAnterior = usuarioRepository.findByIdUsuarioAndEstadoTrue(idGerente)
-            .map(Usuario::getSede)
-            .orElse(null);
+        Sede sedeAnterior = gerente.getSede();
 
-        if (sedeAnterior != null && 
-            sedeAnterior.getIdSede() != null && 
+        if (sedeAnterior != null &&
+            sedeAnterior.getIdSede() != null &&
             !sedeAnterior.getIdSede().equals(sede.getIdSede())) {
             sedeAnterior.setGerente(null);
             sedeRepository.save(sedeAnterior);
         }
 
-        // Asignar nuevo gerente
         sede.setGerente(gerente);
     }
 
     @Override
+    @Transactional
     public void eliminarSede(Integer idSede) {
         Sede sede = sedeRepository.findById(idSede)
             .orElseThrow(() -> new CustomException("Sede no encontrada", HttpStatus.NOT_FOUND));
+
+        if (usuarioRepository.countBySedeIdSedeAndEstadoTrue(idSede) > 0) {
+            throw new CustomException("No se puede desactivar la sede porque tiene usuarios activos", HttpStatus.CONFLICT);
+        }
+
         sede.setEstado(Boolean.FALSE);
         sedeRepository.save(sede);
     }

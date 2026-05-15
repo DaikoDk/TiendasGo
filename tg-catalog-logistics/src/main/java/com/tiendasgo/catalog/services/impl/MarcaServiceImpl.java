@@ -148,8 +148,8 @@ public class MarcaServiceImpl implements IMarcaService {
     public void eliminar(Integer id) {
         Marca existing = marcaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada: " + id));
-        // la tabla marcas no tiene columna estado; si en el futuro quieres soft-delete, agregar columna estado
-        marcaRepository.delete(existing);
+        existing.setActivo(false);
+        marcaRepository.save(existing);
     }
 }
 

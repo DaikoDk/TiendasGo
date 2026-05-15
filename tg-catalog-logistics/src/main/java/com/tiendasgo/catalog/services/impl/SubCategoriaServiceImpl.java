@@ -3,9 +3,11 @@ package com.tiendasgo.catalog.services.impl;
 import com.tiendasgo.catalog.domain.entity.Categoria;
 import com.tiendasgo.catalog.domain.entity.SubCategoria;
 import com.tiendasgo.catalog.domain.repository.CategoriaRepository;
+import com.tiendasgo.catalog.domain.repository.ProductoRepository;
 import com.tiendasgo.catalog.domain.repository.SubCategoriaRepository;
 import com.tiendasgo.catalog.dto.request.SubCategoriaRequest;
 import com.tiendasgo.catalog.dto.response.SubCategoriaResponse;
+import com.tiendasgo.catalog.exceptions.ActiveProductsException;
 import com.tiendasgo.catalog.exceptions.DuplicateResourceException;
 import com.tiendasgo.catalog.exceptions.CodigoMarcaExhaustedException;
 import com.tiendasgo.catalog.exceptions.ResourceNotFoundException;
@@ -25,6 +27,7 @@ public class SubCategoriaServiceImpl implements ISubCategoriaService {
 
     private final SubCategoriaRepository subCategoriaRepository;
     private final CategoriaRepository categoriaRepository;
+    private final ProductoRepository productoRepository;
     private final SubCategoriaMapper subCategoriaMapper;
 
     @Override
@@ -143,6 +146,11 @@ public class SubCategoriaServiceImpl implements ISubCategoriaService {
     public void eliminar(Integer id) {
         SubCategoria existing = subCategoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("SubCategoria no encontrada: " + id));
+
+        if (productoRepository.existsBySubCategoriaIdAndEstadoTrue(id)) {
+            throw new ActiveProductsException("No se puede desactivar la subcategoría porque tiene productos activos asociados.");
+        }
+
         existing.setActivo(Boolean.FALSE);
         subCategoriaRepository.save(existing);
     }

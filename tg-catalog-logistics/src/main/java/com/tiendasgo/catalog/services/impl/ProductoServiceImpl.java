@@ -49,13 +49,18 @@ public class ProductoServiceImpl implements IProductoService {
         Producto existing = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
 
-        // 2. Validar SKU (solo si cambió y no existe en otro producto)
+        // 2. Validar precios
+        if (req.getPrecioVenta().compareTo(req.getPrecioCosto()) <= 0) {
+            throw new InvalidPriceException("El precio de venta debe ser mayor al precio de costo.");
+        }
+
+        // 3. Validar SKU (solo si cambió y no existe en otro producto)
         if (!existing.getSku().equalsIgnoreCase(req.getSku()) &&
                 productoRepository.existsBySku(req.getSku())) {
             throw new DuplicateResourceException("El SKU " + req.getSku() + " ya está en uso por otro producto.");
         }
 
-        // 3. Actualizar campos de texto y valores
+        // 4. Actualizar campos de texto y valores
         existing.setNombreBase(req.getNombreBase());
         existing.setVariante(req.getVariante());
         existing.setMedidaValor(req.getMedidaValor());
@@ -66,7 +71,7 @@ public class ProductoServiceImpl implements IProductoService {
         existing.setImagenUrl(req.getImagenUrl());
         existing.setEstado(req.getEstado());
 
-        // 4. Actualizar Relaciones
+        // 5. Actualizar Relaciones
         // Nota: Debes inyectar MarcaRepository y SubCategoriaRepository
         if (!existing.getMarca().getId().equals(req.getIdMarca())) {
             Marca nuevaMarca = marcaRepository.findById(req.getIdMarca())
@@ -115,6 +120,7 @@ public class ProductoServiceImpl implements IProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
         producto.setEstado(nuevoEstado);
+        productoRepository.save(producto);
     }
 
 

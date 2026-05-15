@@ -1,6 +1,5 @@
 package com.tiendasgo.auth.config;
 
-import com.tiendasgo.auth.security.UserDetailsCustom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
